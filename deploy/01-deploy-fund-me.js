@@ -1,23 +1,34 @@
-//import
-//main function
-//calling of main function`
-// function deployFunc() {
-// 	console.log('Hi!')
-// }
-// module.exports.default = deployFunc
-const { networkConfig } = require('../helper-hardhat-config')
+const { networkConfig, developmentChains } = require('../helper-hardhat-config')
 const { network } = require('hardhat')
+const { verify } = require('../utils/verify')
 module.exports = async ({ getNamedAccounts, deployments }) => {
-	const { deploy, log } = deployments
+	const { deploy, log, get } = deployments
 	const { deployer } = await getNamedAccounts()
 	const chainId = network.config.chainId
-	const ethUsdPriceFeedAddres = networkConfig[chainId]['ethUsdPriceFeed']
-	//well what happens when we want to change chains?
-	//when going for localhost or hardhat network we want to use a mock
+	log('--------------------01-START-------------')
+	console.log({ network })
+	let ethUsdPriceFeedAddres
+	if (developmentChains.includes(network.name)) {
+		const ethUsdAggregator = await deployments.get('MockV3Aggregator')
+		ethUsdPriceFeedAddres = ethUsdAggregator.address
+	} else {
+		ethUsdPriceFeedAddres = networkConfig[chainId]['ethUsdPriceFeed']
+	}
 	console.log({ ethUsdPriceFeedAddres })
+	const args = [ethUsdPriceFeedAddres]
 	const fundMe = await deploy('FundMe', {
 		from: deployer,
-		args: [],
-		log: true
+		args: args,
+		log: true,
+		blockConfirmations: network.config.blockConfirmations || 1
 	})
+	if (
+		!developmentChains.includes(network.name) &&
+		process.env.ETHERSCAN_API_KEY
+	) {
+		await verify(fundMe.address, args)
+	}
+	log('--------------------01-END-------------')
 }
+
+module.exports.tag = ['all', 'FundMe']
