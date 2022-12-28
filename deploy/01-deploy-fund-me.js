@@ -6,7 +6,6 @@ module.exports = async ({ getNamedAccounts, deployments }) => {
 	const { deployer } = await getNamedAccounts()
 	const chainId = network.config.chainId
 	log('--------------------01-START-------------')
-	console.log({ network })
 	let ethUsdPriceFeedAddres
 	if (developmentChains.includes(network.name)) {
 		const ethUsdAggregator = await deployments.get('MockV3Aggregator')
@@ -14,7 +13,6 @@ module.exports = async ({ getNamedAccounts, deployments }) => {
 	} else {
 		ethUsdPriceFeedAddres = networkConfig[chainId]['ethUsdPriceFeed']
 	}
-	console.log({ ethUsdPriceFeedAddres })
 	const args = [ethUsdPriceFeedAddres]
 	const fundMe = await deploy('FundMe', {
 		from: deployer,
@@ -31,4 +29,4 @@ module.exports = async ({ getNamedAccounts, deployments }) => {
 	log('--------------------01-END-------------')
 }
 
-module.exports.tag = ['all', 'FundMe']
+module.exports.tags = ['all', 'fundMe']
