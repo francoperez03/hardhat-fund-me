@@ -1,5 +1,7 @@
 {
-  "name": "hardhat-fund-me-fcc",
+  "name": "hardhat-fund-me",
+  "author": "Franco Perez",
+  "version": "1.0.0",
   "devDependencies": {
     "@chainlink/contracts": "^0.3.1",
     "@nomiclabs/hardhat-ethers": "npm:hardhat-deploy-ethers",
@@ -18,11 +20,11 @@
     "solidity-coverage": "^0.7.18"
   },
   "scripts": {
-    "test": "hardhat test",
-    "test:staging": "hardhat test --network goerli",
-    "lint": "solhint 'contracts/**/*.sol'",
-    "lint:fix": "solhint 'contracts/**/*.sol' --fix",
-    "format": "prettier --write .",
-    "coverage": "hardhat coverage"
+    "test": "yarn hardhat test",
+    "test:staging": "yarn hardhat test --network goerli",
+    "lint": "yarn solhint 'contracts/*.sol'",
+    "lint:fix": "yarn solhint 'contracts/*.sol' --fix",
+    "format": "yarn prettier --write .",
+    "coverage": "yarn hardhat coverage"
   }
 }

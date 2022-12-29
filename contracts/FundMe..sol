@@ -5,6 +5,8 @@ import '@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol';
 import './PriceConverter.sol';
 
 error FundMe__NotOwner();
+error FundMe__CallFailed();
+error FundMe__MinimunNotSent();
 
 /** @title A contract for crowd funding
  *  @author Franco Perez
@@ -15,11 +17,11 @@ error FundMe__NotOwner();
 contract FundMe {
 	using PriceConverter for uint256;
 
-	mapping(address => uint256) public s_addressToAmountFunded;
-	address[] public s_funders;
-	address public immutable i_owner;
-	uint256 public constant MINIMUM_USD = 5 * 1 ether;
-	AggregatorV3Interface public immutable i_priceFeed;
+	mapping(address => uint256) private s_addressToAmountFunded;
+	address[] private s_funders;
+	address private immutable i_owner;
+	uint256 private constant MINIMUM_USD = 5 * 1 ether;
+	AggregatorV3Interface private immutable i_priceFeed;
 
 	modifier onlyOwner() {
 		if (msg.sender != i_owner) revert FundMe__NotOwner();
@@ -43,10 +45,9 @@ contract FundMe {
 	 *  @notice This function funds this contract
 	 */
 	function fund() public payable {
-		require(
-			msg.value.getConversionRate(i_priceFeed) >= MINIMUM_USD,
-			'You need to spend more ETH!'
-		);
+		if (msg.value.getConversionRate(i_priceFeed) < MINIMUM_USD) {
+			revert FundMe__MinimunNotSent();
+		}
 		s_addressToAmountFunded[msg.sender] += msg.value;
 		s_funders.push(msg.sender);
 	}
@@ -65,10 +66,24 @@ contract FundMe {
 		(bool callSuccess, ) = payable(msg.sender).call{
 			value: address(this).balance
 		}('');
-		require(callSuccess, 'Call failed');
+		if (!callSuccess) revert FundMe__CallFailed();
 	}
 
-	function getVersion() public view returns (uint256) {
-		return i_priceFeed.version();
+	function getOwner() public view returns (address) {
+		return i_owner;
+	}
+
+	function getFunder(uint256 index) public view returns (address) {
+		return s_funders[index];
+	}
+
+	function getAddressToAmountFunded(
+		address funder
+	) public view returns (uint256) {
+		return s_addressToAmountFunded[funder];
+	}
+
+	function getPriceFeed() public view returns (AggregatorV3Interface) {
+		return i_priceFeed;
 	}
 }
